@@ -1,21 +1,38 @@
-﻿version: "3.6"
+version: "3.4"
+
 services:
   rabbitmq:
     image: masstransit/rabbitmq:latest
     ports:
       - "5672:5672"
       - "15672:15672"
-  postgres:
-    image: "postgres:9.6"
-    environment:
-      - "POSTGRES_PASSWORD=Password12!"
-    ports:
-      - 5432:5432
-  service:
-    image: jobservice/service
+  jobservice.service.A:
+    container_name: JobServiceA
+    image: ${DOCKER_REGISTRY-}jobserviceservice
     build:
-      context: ./src
-      dockerfile: Dockerfile.service
+      context: .
+      dockerfile: src/JobService.Service/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     ports:
      - "5000:80"
-     - "5001:81"
+     - "5001:443"
+  #jobservice.service.B:
+  #  container_name: JobServiceB
+  #  image: ${DOCKER_REGISTRY-}jobserviceservice
+  #  build:
+  #    context: .
+  #    dockerfile: src/JobService.Service/Dockerfile
+  #  ports:
+  #   - "5002:80"
+  #   - "5003:443"
+  #  environment:
+  #    - ASPNETCORE_ENVIRONMENT=Development
+  #    - ASPNETCORE_URLS=https://+:443;http://+:80
+  #  volumes:
+  #    - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+  #    - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro

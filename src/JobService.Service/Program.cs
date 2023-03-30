@@ -46,21 +46,6 @@ builder.Services.AddOpenApiDocument(cfg => cfg.PostProcess = d =>
     };
 });
 
-AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
-builder.Services.AddDbContext<JobServiceSagaDbContext>(optionsBuilder =>
-{
-    var connectionString = builder.Configuration.GetConnectionString("JobService");
-
-    optionsBuilder.UseNpgsql(connectionString, m =>
-    {
-        m.MigrationsAssembly(Assembly.GetExecutingAssembly().GetName().Name);
-        m.MigrationsHistoryTable($"__{nameof(JobServiceSagaDbContext)}");
-    });
-});
-
-builder.Services.AddHostedService<MigrationHostedService<JobServiceSagaDbContext>>();
-
 builder.Services.AddMassTransit(x =>
 {
     x.AddDelayedMessageScheduler();
@@ -70,24 +55,9 @@ builder.Services.AddMassTransit(x =>
 
     x.AddConsumer<TrackVideoConvertedConsumer>();
 
-    x.AddSagaRepository<JobSaga>()
-        .EntityFrameworkRepository(r =>
-        {
-            r.ExistingDbContext<JobServiceSagaDbContext>();
-            r.UsePostgres();
-        });
-    x.AddSagaRepository<JobTypeSaga>()
-        .EntityFrameworkRepository(r =>
-        {
-            r.ExistingDbContext<JobServiceSagaDbContext>();
-            r.UsePostgres();
-        });
-    x.AddSagaRepository<JobAttemptSaga>()
-        .EntityFrameworkRepository(r =>
-        {
-            r.ExistingDbContext<JobServiceSagaDbContext>();
-            r.UsePostgres();
-        });
+    x.AddSagaRepository<JobSaga>().InMemoryRepository();
+    x.AddSagaRepository<JobTypeSaga>().InMemoryRepository();
+    x.AddSagaRepository<JobAttemptSaga>().InMemoryRepository();
 
     x.SetKebabCaseEndpointNameFormatter();
 
